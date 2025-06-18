@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task List</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 1rem; background: #f4f4f4; }
+    h1 { text-align: center; }
+    #taskInput { width: 100%; padding: 1rem; font-size: 1rem; margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li {
+      background: white;
+      margin-bottom: 0.5rem;
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      touch-action: pan-y;
+    }
+    li.done { text-decoration: line-through; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <h1>Task List</h1>
+  <input type="text" id="taskInput" placeholder="Add a new task..." />
+  <ul id="taskList"></ul>
+
+  <script>
+    const taskInput = document.getElementById("taskInput");
+    const taskList = document.getElementById("taskList");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks") || JSON.stringify([{"text": "Bristol - Permits city exc, DOT exc, Bldg, Demo, Electrical - Molly", "done": false}, {"text": "Bristol - SWPPP", "done": false}, {"text": "ecoPS - bldg subm. Molly.", "done": false}, {"text": "ecoPS - finalize billing RTD/Owner - get with CAS on this", "done": false}, {"text": "Fitch - roll cost codes up", "done": false}, {"text": "Lewiston Redundant - delete BI 17", "done": false}, {"text": "Meredith - Pathways, iCx", "done": false}, {"text": "Mex - '25 Pave Mix Designs requested from Jamie 5/21", "done": false}, {"text": "Mex - Athl. surface subm. 5/15 left v-m", "done": false}, {"text": "Procore Subm. Review", "done": false}, {"text": "Saco - catch up on COs em CAS 5/15", "done": false}, {"text": "Saco - f/up on Field Memo 40 (sent to TH 6/3/25)", "done": false}, {"text": "Saco - Gervais 112 flatwork under bridge", "done": false}, {"text": "Saco - Moulison C.O. requests", "done": false}, {"text": "Saco - recover GZA - e-m CAS 5/8 CAS on it", "done": false}, {"text": "Saco - retainage on subs", "done": false}, {"text": "Saco - subm. dive", "done": false}, {"text": "General - Lessons Learned", "done": false}, {"text": "General - OSHA 10", "done": false}, {"text": "General - ChatGPT", "done": false}, {"text": "General - First Rule Training", "done": false}, {"text": "General - All Job Folder Review", "done": false}, {"text": "General - CTCs to JC", "done": false}, {"text": "General - Inits Review", "done": false}]));
+
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+      tasks.forEach((task, index) => {
+        const li = document.createElement("li");
+        li.textContent = task.text;
+        if (task.done) li.classList.add("done");
+
+        let tapCount = 0;
+        let tapTimeout;
+        let startX = 0;
+
+        li.addEventListener("touchstart", e => {
+          startX = e.touches[0].clientX;
+        });
+
+        li.addEventListener("touchend", ev => {
+          const endX = ev.changedTouches[0].clientX;
+          if (startX - endX > 50) {
+            const confirmDelete = confirm(`Delete this task?\n\n"${task.text}"`);
+            if (confirmDelete) {
+              tasks.splice(index, 1);
+              saveTasks();
+              renderTasks();
+            }
+          }
+        });
+
+        li.addEventListener("click", () => {
+          tapCount++;
+          clearTimeout(tapTimeout);
+          tapTimeout = setTimeout(() => {
+            if (tapCount === 2) {
+              tasks[index].done = !tasks[index].done;
+              saveTasks();
+              renderTasks();
+            }
+            tapCount = 0;
+          }, 300);
+        });
+
+        taskList.appendChild(li);
+      });
+    }
+
+    taskInput.addEventListener("keydown", e => {
+      if ((e.key === "Enter" || e.keyCode === 13) && taskInput.value.trim()) {
+        tasks.push({ text: taskInput.value.trim(), done: false });
+        taskInput.value = "";
+        saveTasks();
+        renderTasks();
+      }
+    });
+
+    renderTasks();
+  </script>
+</body>
+</html>
